@@ -1,0 +1,1 @@
+Baixar o ffmpeg e colocar na pasta bin, na raiz desse projeto.
