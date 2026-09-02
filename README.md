@@ -1,1 +1,1 @@
-Baixar o ffmpeg e colocar na pasta bin, na raiz desse projeto.
+Baixar o ffmpeg e colocar os arquivos ffmpeg.exe e ffprobe.exe na pasta bin, na raiz desse projeto.
