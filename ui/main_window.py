@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QSizePolicy,
     QCheckBox,
+    QComboBox,
+    QDialog,
 )
 
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -31,6 +33,46 @@ from core.youtube import YouTubeAnalyzer
 from workers.analyze_worker import AnalyzeWorker
 from workers.download_worker import DownloadWorker
 from ui.video_item import VideoItem
+
+
+class LogDialog(QDialog):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Logs")
+        self.resize(700, 420)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        self.texto = QTextEdit()
+        self.texto.setReadOnly(True)
+        self.texto.setStyleSheet("""
+            QTextEdit {
+                background: #ffffff;
+                border: 1px solid #dfe7ee;
+                border-radius: 8px;
+                color: #374151;
+            }
+        """)
+
+        botao_limpar = QPushButton("Limpar")
+        botao_limpar.setStyleSheet("""
+            QPushButton {
+                background: #e5e7eb;
+                border: none;
+                border-radius: 8px;
+                color: #374151;
+                font-weight: 600;
+                padding: 8px 12px;
+            }
+        """)
+        botao_limpar.clicked.connect(self.texto.clear)
+
+        layout.addWidget(self.texto)
+        layout.addWidget(botao_limpar, alignment=Qt.AlignRight)
 
 
 class MainWindow(QMainWindow):
@@ -67,6 +109,9 @@ class MainWindow(QMainWindow):
             "YT_DOWNLOADER_MONETIZATION_URL",
             ""
         ).strip()
+
+        self.log_dialog = LogDialog(self)
+        self.log = self.log_dialog.texto
 
         # =====================================================
         # INTERFACE
@@ -174,6 +219,19 @@ class MainWindow(QMainWindow):
         title_buttons = QHBoxLayout()
         title_buttons.setSpacing(8)
 
+        self.botao_logs = QPushButton("Logs")
+        self.botao_logs.setFixedHeight(30)
+        self.botao_logs.setStyleSheet("""
+            QPushButton {
+                background: #dbeafe;
+                border: none;
+                border-radius: 8px;
+                color: #1d4ed8;
+                font-weight: 600;
+                padding: 0 12px;
+            }
+        """)
+
         button_min = QPushButton("—")
         button_min.setFixedSize(30, 30)
         button_min.setStyleSheet("""
@@ -198,6 +256,7 @@ class MainWindow(QMainWindow):
             }
         """)
 
+        title_buttons.addWidget(self.botao_logs)
         title_buttons.addWidget(button_min)
         title_buttons.addWidget(button_close)
         row_title.addLayout(title_buttons)
@@ -520,23 +579,39 @@ class MainWindow(QMainWindow):
         label_opcoes.setStyleSheet("font-size: 16px; font-weight: bold;")
         layout_painel_opcoes.addWidget(label_opcoes)
 
-        for texto in ["Baixar legendas", "Converter para MP3"]:
-            linha = QHBoxLayout()
-            linha.setSpacing(8)
+        self.formato_global = QComboBox()
+        self.formato_global.addItem("MP4", "mp4")
+        self.formato_global.addItem("MP3", "mp3")
+        self.formato_global.currentIndexChanged.connect(
+            self.atualizar_qualidade_global
+        )
+
+        self.qualidade_global = QComboBox()
+        self.atualizar_qualidade_global()
+
+        linhas = [
+            ("Formato de download", self.formato_global),
+            ("Qualidade", self.qualidade_global),
+        ]
+
+        for texto, combo in linhas:
+            linha = QVBoxLayout()
+            linha.setSpacing(6)
 
             label = QLabel(texto)
             label.setStyleSheet("font-size: 12px; color: #374151;")
-            checkbox = QCheckBox()
-            checkbox.setChecked(False)
-            checkbox.setStyleSheet("""
-                QCheckBox {
-                    spacing: 8px;
+
+            combo.setStyleSheet("""
+                QComboBox {
+                    background: #ffffff;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    padding: 6px 8px;
                 }
             """)
 
             linha.addWidget(label)
-            linha.addStretch()
-            linha.addWidget(checkbox)
+            linha.addWidget(combo)
             layout_painel_opcoes.addLayout(linha)
 
         layout_direito.addWidget(painel_opcoes)
@@ -593,38 +668,16 @@ class MainWindow(QMainWindow):
 
         layout_direito.addStretch()
 
-        # =====================================================
-        # LOG
-        # =====================================================
-
-        label_log = QLabel("Log")
-        label_log.setStyleSheet("""
-            font-size: 16px;
-            font-weight: bold;
-        """)
-
-        layout_conteudo.addWidget(label_log)
-
-        self.log = QTextEdit()
-        self.log.setReadOnly(True)
-        self.log.setMaximumHeight(180)
-        self.log.setStyleSheet("""
-            QTextEdit {
-                background: #ffffff;
-                border: 1px solid #dfe7ee;
-                border-radius: 8px;
-                color: #374151;
-            }
-        """)
-
-        layout_conteudo.addWidget(self.log)
-
         self.area_anuncios_inferior = QWidget()
         self.area_anuncios_inferior.setVisible(False)
 
         # =====================================================
         # EVENTOS
         # =====================================================
+
+        self.botao_logs.clicked.connect(
+            self.abrir_logs
+        )
 
         self.botao_analisar.clicked.connect(
             self.analisar
@@ -645,6 +698,35 @@ class MainWindow(QMainWindow):
         self.botao_pasta.clicked.connect(
             self.selecionar_pasta
         )
+
+    def abrir_logs(self):
+
+        self.log_dialog.show()
+        self.log_dialog.raise_()
+        self.log_dialog.activateWindow()
+
+    def atualizar_qualidade_global(self):
+
+        formato = self.formato_global.currentData() or "mp4"
+
+        self.qualidade_global.blockSignals(True)
+        self.qualidade_global.clear()
+
+        if formato == "mp3":
+            self.qualidade_global.addItem("Melhor áudio", "best")
+            for valor, texto in [
+                ("320", "320 kbps"),
+                ("192", "192 kbps"),
+                ("128", "128 kbps"),
+            ]:
+                self.qualidade_global.addItem(texto, valor)
+        else:
+            self.qualidade_global.addItem("Melhor disponível", "best")
+            for valor in ["2160", "1440", "1080", "720", "480", "360", "240"]:
+                self.qualidade_global.addItem(f"{valor}p", valor)
+
+        self.qualidade_global.setCurrentIndex(0)
+        self.qualidade_global.blockSignals(False)
 
     def _carregar_area_monetizacao(
         self,
@@ -1187,9 +1269,18 @@ class MainWindow(QMainWindow):
 
         self.download_thread = QThread()
 
+        formato = self.formato_global.currentData() or "mp4"
+        qualidade = self.qualidade_global.currentData() or "best"
+
+        for video in selecionados:
+            video.selected_format = formato
+            video.selected_quality = qualidade
+
         self.download_worker = DownloadWorker(
             selecionados,
-            pasta
+            pasta,
+            formato=formato,
+            qualidade=qualidade,
         )
 
         self.download_worker.moveToThread(

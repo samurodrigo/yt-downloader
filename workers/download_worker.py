@@ -28,12 +28,16 @@ class DownloadWorker(QObject):
         self,
         videos,
         pasta_destino,
+        formato="mp4",
+        qualidade="best",
     ):
 
         super().__init__()
 
         self.videos = videos
         self.pasta_destino = pasta_destino
+        self.formato = formato
+        self.qualidade = qualidade
 
         self.downloader = (
             YouTubeDownloader()
@@ -69,14 +73,15 @@ class DownloadWorker(QObject):
                     f"Baixando: {video.title}"
                 )
 
+                video.selected_format = self.formato
+                video.selected_quality = self.qualidade
+
                 self.log.emit(
-                    f"Formato: "
-                    f"{video.selected_format.upper()}"
+                    f"Formato: {self.formato.upper()}"
                 )
 
                 self.log.emit(
-                    f"Qualidade: "
-                    f"{video.selected_quality}"
+                    f"Qualidade: {self.qualidade}"
                 )
 
                 resultado = (

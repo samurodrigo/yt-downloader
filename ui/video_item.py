@@ -4,13 +4,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QCheckBox,
-    QComboBox,
     QFrame,
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QPixmap
 
-from core.formats import FormatManager
 from workers.thumbnail_worker import ThumbnailWorker
 
 
@@ -27,7 +25,6 @@ class VideoItem(QFrame):
         self.thumbnail_worker = None
 
         self.criar_interface()
-        self.atualizar_qualidades()
         self.carregar_thumbnail()
 
     def criar_interface(self):
@@ -174,61 +171,6 @@ class VideoItem(QFrame):
             stretch=1
         )
 
-        # Opções
-        layout_opcoes = QVBoxLayout()
-
-        label_formato = QLabel(
-            "Formato"
-        )
-        label_formato.setStyleSheet("font-size: 11px; color: #4b5563;")
-
-        self.combo_formato = QComboBox()
-
-        self.combo_formato.addItems([
-            "MP4",
-            "MP3",
-        ])
-
-        self.combo_formato.setCurrentText(
-            "MP4"
-        )
-
-        self.combo_formato.currentTextChanged.connect(
-            self.formato_alterado
-        )
-
-        label_qualidade = QLabel(
-            "Qualidade"
-        )
-        label_qualidade.setStyleSheet("font-size: 11px; color: #4b5563;")
-
-        self.combo_qualidade = QComboBox()
-
-        self.combo_qualidade.currentIndexChanged.connect(
-            self.qualidade_alterada
-        )
-
-        layout_opcoes.addWidget(
-            label_formato
-        )
-
-        layout_opcoes.addWidget(
-            self.combo_formato
-        )
-
-        layout_opcoes.addWidget(
-            label_qualidade
-        )
-
-        layout_opcoes.addWidget(
-            self.combo_qualidade
-        )
-
-        layout_opcoes.addStretch()
-
-        layout_principal.addLayout(
-            layout_opcoes
-        )
 
     def formatar_duracao(self, segundos):
 
@@ -254,109 +196,6 @@ class VideoItem(QFrame):
             f"{minutos:02d}:"
             f"{segundos:02d}"
         )
-
-    def atualizar_qualidades(self):
-
-        self.combo_qualidade.blockSignals(
-            True
-        )
-
-        self.combo_qualidade.clear()
-
-        formato = (
-            self.combo_formato.currentText()
-        )
-
-        if formato == "MP4":
-
-            self.combo_qualidade.addItem(
-                "Melhor disponível",
-                "best"
-            )
-
-            qualidades = (
-                FormatManager
-                .get_video_qualities(
-                    self.video.formats
-                )
-            )
-
-            for qualidade in qualidades:
-
-                nome = (
-                    FormatManager
-                    .format_video_quality(
-                        qualidade
-                    )
-                )
-
-                self.combo_qualidade.addItem(
-                    nome,
-                    str(qualidade)
-                )
-
-        else:
-
-            self.combo_qualidade.addItem(
-                "Melhor áudio disponível",
-                "best"
-            )
-
-            qualidades = (
-                FormatManager
-                .get_audio_qualities(
-                    self.video.formats
-                )
-            )
-
-            for qualidade in qualidades:
-
-                nome = (
-                    FormatManager
-                    .format_audio_quality(
-                        qualidade
-                    )
-                )
-
-                self.combo_qualidade.addItem(
-                    nome,
-                    str(qualidade)
-                )
-
-        self.combo_qualidade.setCurrentIndex(
-            0
-        )
-
-        self.video.selected_quality = (
-            self.combo_qualidade.itemData(0)
-        )
-
-        self.combo_qualidade.blockSignals(
-            False
-        )
-
-    def formato_alterado(self, formato):
-
-        if formato == "MP3":
-            self.video.selected_format = "mp3"
-        else:
-            self.video.selected_format = "mp4"
-
-        self.atualizar_qualidades()
-
-    def qualidade_alterada(self, index):
-
-        valor = (
-            self.combo_qualidade.itemData(
-                index
-            )
-        )
-
-        if valor is not None:
-
-            self.video.selected_quality = (
-                valor
-            )
 
     def checkbox_alterado(self, estado):
 
