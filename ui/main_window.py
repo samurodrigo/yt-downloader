@@ -1,3 +1,8 @@
+import sys
+from pathlib import Path
+import html
+import os
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -10,18 +15,21 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QScrollArea,
     QFileDialog,
+    QSizePolicy,
 )
+
+from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from PySide6.QtCore import (
     Qt,
     QThread,
+    QUrl,
 )
 
 from core.youtube import YouTubeAnalyzer
 from workers.analyze_worker import AnalyzeWorker
 from workers.download_worker import DownloadWorker
 from ui.video_item import VideoItem
-import os
 
 
 class MainWindow(QMainWindow):
@@ -54,15 +62,40 @@ class MainWindow(QMainWindow):
 
         # Lista de itens de vídeo
         self.video_items = []
+        self.monetization_url = os.getenv(
+            "YT_DOWNLOADER_MONETIZATION_URL",
+            ""
+        ).strip()
 
         # =====================================================
         # INTERFACE
         # =====================================================
-        self.pasta_destino = os.path.dirname(
-            os.path.abspath(__file__)
+        self.pasta_destino = str(
+            self._resolver_pasta_inicial()
         )
 
         self.criar_interface()
+
+    def _resolver_pasta_inicial(self):
+
+        if getattr(sys, "frozen", False):
+
+            base_dir = Path(
+                sys.executable
+            ).resolve().parent
+
+        else:
+
+            base_dir = Path.cwd()
+
+        pasta_inicial = base_dir / "downloads"
+
+        pasta_inicial.mkdir(
+            parents=True,
+            exist_ok=True
+        )
+
+        return pasta_inicial
 
 
     # =========================================================
@@ -153,6 +186,93 @@ class MainWindow(QMainWindow):
         )
 
         # =====================================================
+        # CORPO PRINCIPAL DA JANELA
+        # =====================================================
+
+        layout_corpo = QHBoxLayout()
+        layout_corpo.setSpacing(
+            12
+        )
+
+        layout_conteudo = QVBoxLayout()
+
+        # =====================================================
+        # MONETIZAÇÃO LATERAL
+        # =====================================================
+
+        self.area_anuncios_lateral = QWidget()
+        self.area_anuncios_lateral.setObjectName(
+            "areaAnunciosLateral"
+        )
+        self.area_anuncios_lateral.setFixedWidth(
+            180
+        )
+        self.area_anuncios_lateral.setStyleSheet("""
+            QWidget#areaAnunciosLateral {
+                border: 1px solid #d9d9d9;
+                border-radius: 10px;
+                background-color: #ffffff;
+            }
+        """)
+
+        layout_anuncios_lateral = QVBoxLayout(
+            self.area_anuncios_lateral
+        )
+        layout_anuncios_lateral.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        self.web_anuncios_lateral = QWebEngineView()
+        self.web_anuncios_lateral.setMinimumSize(
+            160,
+            420
+        )
+
+        layout_anuncios_lateral.addWidget(
+            self.web_anuncios_lateral
+        )
+
+        self._carregar_area_monetizacao(
+            self.web_anuncios_lateral,
+            "Espaço de monetização lateral",
+            "Área reservada para um banner vertical de anúncios."
+        )
+
+        layout_corpo.addWidget(
+            self.area_anuncios_lateral
+        )
+
+        self.container_conteudo = QWidget()
+        self.container_conteudo.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Preferred
+        )
+        layout_conteudo = QVBoxLayout(
+            self.container_conteudo
+        )
+        layout_conteudo.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+        layout_conteudo.setSpacing(
+            10
+        )
+
+        layout_corpo.addWidget(
+            self.container_conteudo,
+            stretch=1
+        )
+
+        layout_principal.addLayout(
+            layout_corpo
+        )
+
+        # =====================================================
         # CABEÇALHO DA ÁREA DE VÍDEOS
         # =====================================================
 
@@ -186,7 +306,7 @@ class MainWindow(QMainWindow):
             self.label_selecionados
         )
 
-        layout_principal.addLayout(
+        layout_conteudo.addLayout(
             layout_cabecalho_videos
         )
 
@@ -214,7 +334,7 @@ class MainWindow(QMainWindow):
 
         layout_selecao.addStretch()
 
-        layout_principal.addLayout(
+        layout_conteudo.addLayout(
             layout_selecao
         )
 
@@ -246,7 +366,7 @@ class MainWindow(QMainWindow):
             self.container_videos
         )
 
-        layout_principal.addWidget(
+        layout_conteudo.addWidget(
             self.scroll_videos,
             stretch=1
         )
@@ -287,7 +407,7 @@ class MainWindow(QMainWindow):
             self.botao_pasta
         )
 
-        layout_principal.addLayout(
+        layout_conteudo.addLayout(
             layout_pasta
         )
 
@@ -357,7 +477,7 @@ class MainWindow(QMainWindow):
             self.barra_progresso
         )
 
-        layout_principal.addLayout(
+        layout_conteudo.addLayout(
             layout_download
         )
 
@@ -374,7 +494,7 @@ class MainWindow(QMainWindow):
             font-weight: bold;
         """)
 
-        layout_principal.addWidget(
+        layout_conteudo.addWidget(
             label_log
         )
 
@@ -388,8 +508,56 @@ class MainWindow(QMainWindow):
             150
         )
 
-        layout_principal.addWidget(
+        layout_conteudo.addWidget(
             self.log
+        )
+
+        # =====================================================
+        # MONETIZAÇÃO INFERIOR
+        # =====================================================
+
+        self.area_anuncios_inferior = QWidget()
+        self.area_anuncios_inferior.setObjectName(
+            "areaAnunciosInferior"
+        )
+        self.area_anuncios_inferior.setMinimumHeight(
+            92
+        )
+        self.area_anuncios_inferior.setStyleSheet("""
+            QWidget#areaAnunciosInferior {
+                border: 1px solid #d9d9d9;
+                border-radius: 10px;
+                background-color: #ffffff;
+            }
+        """)
+
+        layout_anuncios_inferior = QVBoxLayout(
+            self.area_anuncios_inferior
+        )
+        layout_anuncios_inferior.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        self.web_anuncios_inferior = QWebEngineView()
+        self.web_anuncios_inferior.setMinimumHeight(
+            88
+        )
+
+        layout_anuncios_inferior.addWidget(
+            self.web_anuncios_inferior
+        )
+
+        self._carregar_area_monetizacao(
+            self.web_anuncios_inferior,
+            "Espaço de monetização inferior",
+            "Faixa menor reservada para anúncios na parte inferior."
+        )
+
+        layout_conteudo.addWidget(
+            self.area_anuncios_inferior
         )
 
         # =====================================================
@@ -414,6 +582,90 @@ class MainWindow(QMainWindow):
 
         self.botao_pasta.clicked.connect(
             self.selecionar_pasta
+        )
+
+    def _carregar_area_monetizacao(
+        self,
+        view,
+        titulo,
+        descricao,
+    ):
+
+        if self.monetization_url:
+
+            view.setUrl(
+                QUrl(
+                    self.monetization_url
+                )
+            )
+
+            return
+
+        mensagem = html.escape(
+            descricao
+        )
+
+        view.setHtml(
+            f"""
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    html, body {{
+                        margin: 0;
+                        width: 100%;
+                        height: 100%;
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #f7f9fc 0%, #eef3f8 100%);
+                        color: #2d3748;
+                    }}
+                    .wrap {{
+                        box-sizing: border-box;
+                        width: 100%;
+                        height: 100%;
+                        padding: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }}
+                    .card {{
+                        width: 100%;
+                        height: 100%;
+                        border: 1px dashed #b8c3d1;
+                        border-radius: 12px;
+                        background: rgba(255, 255, 255, 0.9);
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        text-align: center;
+                        padding: 20px;
+                        box-sizing: border-box;
+                    }}
+                    .title {{
+                        font-size: 18px;
+                        font-weight: 700;
+                        margin-bottom: 8px;
+                    }}
+                    .text {{
+                        font-size: 13px;
+                        line-height: 1.5;
+                        max-width: 620px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="wrap">
+                    <div class="card">
+                        <div class="title">{html.escape(titulo)}</div>
+                        <div class="text">{mensagem}</div>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
         )
 
     # =========================================================

@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import yt_dlp
@@ -7,15 +8,39 @@ class YouTubeDownloader:
 
     def __init__(self):
 
-        self.base_dir = (
+        self.base_dir = self._resolver_base_dir()
+
+        self.ffmpeg_dir = (
+            self.base_dir / "bin"
+        )
+
+        self.ffmpeg_path = (
+            self.ffmpeg_dir / "ffmpeg.exe"
+        )
+
+    def _resolver_base_dir(self):
+
+        if getattr(sys, "frozen", False):
+
+            meipass = getattr(
+                sys,
+                "_MEIPASS",
+                None
+            )
+
+            if meipass:
+
+                return Path(meipass)
+
+            return Path(
+                sys.executable
+            ).resolve().parent
+
+        return (
             Path(__file__)
             .resolve()
             .parent
             .parent
-        )
-
-        self.ffmpeg_dir = (
-            self.base_dir / "bin"
         )
 
     def baixar(
@@ -107,7 +132,9 @@ class YouTubeDownloader:
             ),
 
             "ffmpeg_location": str(
-                self.ffmpeg_dir
+                self.ffmpeg_path
+                if self.ffmpeg_path.exists()
+                else self.ffmpeg_dir
             ),
 
             "noplaylist": True,
