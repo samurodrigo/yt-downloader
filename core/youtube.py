@@ -29,6 +29,21 @@ class YouTubeAnalyzer:
             "no_warnings": True,
             "skip_download": True,
             "ignoreerrors": True,
+            "retries": 3,
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["web", "android", "ios"],
+                    "skip": ["webpage"],
+                }
+            },
+            "http_headers": {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+            },
             "logger": YouTubeLogger(),
         }
 
@@ -333,10 +348,12 @@ class YouTubeAnalyzer:
                 or "video removed" in mensagem
                 or "vídeo indisponível" in mensagem
                 or "vídeo removido" in mensagem
+                or "http error 403" in mensagem
+                or "forbidden" in mensagem
             ):
 
                 print(
-                    "Vídeo indisponível ignorado."
+                    "Vídeo indisponível ou bloqueado pelo YouTube. Ignorado."
                 )
 
                 return None

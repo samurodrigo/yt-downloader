@@ -42,31 +42,36 @@ class VideoItem(QFrame):
 
         self.setStyleSheet("""
             QFrame {
-                background-color: #f5f5f5;
-                border: 1px solid #d0d0d0;
-                border-radius: 6px;
+                background-color: #ffffff;
+                border: 1px solid #dfe7ee;
+                border-radius: 12px;
             }
 
             QLabel {
                 border: none;
+                color: #1f2937;
             }
 
             QComboBox {
-                padding: 5px;
-                border: 1px solid #bbbbbb;
-                border-radius: 4px;
+                padding: 5px 8px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
                 background: white;
+                color: #374151;
             }
         """)
+
+        self.setFixedHeight(118)
 
         layout_principal = QHBoxLayout()
 
         layout_principal.setContentsMargins(
             10,
+            8,
             10,
-            10,
-            10
+            8
         )
+        layout_principal.setSpacing(10)
 
         self.setLayout(
             layout_principal
@@ -93,8 +98,8 @@ class VideoItem(QFrame):
         )
 
         self.thumbnail.setFixedSize(
-            160,
-            90
+            140,
+            84
         )
 
         self.thumbnail.setAlignment(
@@ -102,9 +107,10 @@ class VideoItem(QFrame):
         )
 
         self.thumbnail.setStyleSheet("""
-            background-color: #202020;
-            color: #aaaaaa;
-            border-radius: 4px;
+            background-color: #1f2937;
+            color: #d1d5db;
+            border-radius: 8px;
+            font-size: 11px;
         """)
 
         layout_principal.addWidget(
@@ -124,7 +130,8 @@ class VideoItem(QFrame):
 
         self.titulo.setStyleSheet("""
             font-size: 15px;
-            font-weight: bold;
+            font-weight: 700;
+            color: #111827;
         """)
 
         layout_info.addWidget(
@@ -139,6 +146,7 @@ class VideoItem(QFrame):
         self.label_canal = QLabel(
             f"Canal: {canal}"
         )
+        self.label_canal.setStyleSheet("color: #4b5563; font-size: 12px;")
 
         layout_info.addWidget(
             self.label_canal
@@ -153,6 +161,7 @@ class VideoItem(QFrame):
             self.label_duracao = QLabel(
                 f"Duração: {duracao}"
             )
+            self.label_duracao.setStyleSheet("color: #4b5563; font-size: 12px;")
 
             layout_info.addWidget(
                 self.label_duracao
@@ -171,6 +180,7 @@ class VideoItem(QFrame):
         label_formato = QLabel(
             "Formato"
         )
+        label_formato.setStyleSheet("font-size: 11px; color: #4b5563;")
 
         self.combo_formato = QComboBox()
 
@@ -190,6 +200,7 @@ class VideoItem(QFrame):
         label_qualidade = QLabel(
             "Qualidade"
         )
+        label_qualidade.setStyleSheet("font-size: 11px; color: #4b5563;")
 
         self.combo_qualidade = QComboBox()
 
