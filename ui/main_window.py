@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QFileDialog,
     QSizePolicy,
+    QCheckBox,
 )
 
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -124,153 +125,164 @@ class MainWindow(QMainWindow):
         )
 
         layout_principal.setSpacing(
-            10
+            12
         )
 
         central.setLayout(
             layout_principal
         )
 
+        central.setStyleSheet("""
+            QWidget {
+                background-color: #edf3f7;
+                color: #1f2937;
+            }
+            QLineEdit, QComboBox, QTextEdit, QPushButton {
+                border-radius: 8px;
+            }
+        """)
+
         # =====================================================
         # TÍTULO
         # =====================================================
 
-        titulo = QLabel(
-            "Meu Downloader"
-        )
+        row_title = QHBoxLayout()
 
-        titulo.setAlignment(
-            Qt.AlignCenter
-        )
-
-        titulo.setStyleSheet("""
-            font-size: 26px;
+        icon_app = QLabel("◉")
+        icon_app.setFixedSize(24, 24)
+        icon_app.setAlignment(Qt.AlignCenter)
+        icon_app.setStyleSheet("""
+            background: #e8f1ff;
+            color: #2b6df7;
+            border-radius: 12px;
+            font-size: 14px;
             font-weight: bold;
-            padding: 10px;
         """)
 
-        layout_principal.addWidget(
-            titulo
-        )
+        titulo = QLabel("Meu Downloader")
+        titulo.setAlignment(Qt.AlignLeft)
+        titulo.setStyleSheet("""
+            font-size: 24px;
+            font-weight: bold;
+            color: #1f2937;
+        """)
+
+        row_title.addWidget(icon_app)
+        row_title.addWidget(titulo)
+        row_title.addStretch()
+
+        title_buttons = QHBoxLayout()
+        title_buttons.setSpacing(8)
+
+        button_min = QPushButton("—")
+        button_min.setFixedSize(30, 30)
+        button_min.setStyleSheet("""
+            QPushButton {
+                background: #e5e7eb;
+                border: none;
+                border-radius: 8px;
+                color: #374151;
+                font-weight: bold;
+            }
+        """)
+
+        button_close = QPushButton("✕")
+        button_close.setFixedSize(30, 30)
+        button_close.setStyleSheet("""
+            QPushButton {
+                background: #fca5a5;
+                border: none;
+                border-radius: 8px;
+                color: #991b1b;
+                font-weight: bold;
+            }
+        """)
+
+        title_buttons.addWidget(button_min)
+        title_buttons.addWidget(button_close)
+        row_title.addLayout(title_buttons)
+
+        layout_principal.addLayout(row_title)
 
         # =====================================================
         # ÁREA DA URL
         # =====================================================
 
         layout_url = QHBoxLayout()
+        layout_url.setSpacing(10)
 
         self.campo_url = QLineEdit()
-
         self.campo_url.setPlaceholderText(
-            "Cole aqui a URL de um vídeo ou playlist do YouTube..."
+            "https://music.youtube.com/playlist?list=..."
         )
+        self.campo_url.setStyleSheet("""
+            QLineEdit {
+                background: #ffffff;
+                border: 1px solid #d1d5db;
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        """)
 
-        self.botao_analisar = QPushButton(
-            "Analisar"
-        )
+        self.botao_analisar = QPushButton("Analisar")
+        self.botao_analisar.setMinimumWidth(110)
+        self.botao_analisar.setStyleSheet("""
+            QPushButton {
+                background: #2563eb;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                font-weight: bold;
+                border-radius: 8px;
+            }
+        """)
 
-        self.botao_analisar.setMinimumWidth(
-            120
-        )
+        layout_url.addWidget(self.campo_url)
+        layout_url.addWidget(self.botao_analisar)
 
-        layout_url.addWidget(
-            self.campo_url
-        )
-
-        layout_url.addWidget(
-            self.botao_analisar
-        )
-
-        layout_principal.addLayout(
-            layout_url
-        )
+        layout_principal.addLayout(layout_url)
 
         # =====================================================
         # CORPO PRINCIPAL DA JANELA
         # =====================================================
 
         layout_corpo = QHBoxLayout()
-        layout_corpo.setSpacing(
-            12
-        )
-
-        layout_conteudo = QVBoxLayout()
-
-        # =====================================================
-        # MONETIZAÇÃO LATERAL
-        # =====================================================
-
-        self.area_anuncios_lateral = QWidget()
-        self.area_anuncios_lateral.setObjectName(
-            "areaAnunciosLateral"
-        )
-        self.area_anuncios_lateral.setFixedWidth(
-            180
-        )
-        self.area_anuncios_lateral.setStyleSheet("""
-            QWidget#areaAnunciosLateral {
-                border: 1px solid #d9d9d9;
-                border-radius: 10px;
-                background-color: #ffffff;
-            }
-        """)
-
-        layout_anuncios_lateral = QVBoxLayout(
-            self.area_anuncios_lateral
-        )
-        layout_anuncios_lateral.setContentsMargins(
-            0,
-            0,
-            0,
-            0
-        )
-
-        self.web_anuncios_lateral = QWebEngineView()
-        self.web_anuncios_lateral.setMinimumSize(
-            160,
-            420
-        )
-
-        layout_anuncios_lateral.addWidget(
-            self.web_anuncios_lateral
-        )
-
-        self._carregar_area_monetizacao(
-            self.web_anuncios_lateral,
-            "Espaço de monetização lateral",
-            "Área reservada para um banner vertical de anúncios."
-        )
-
-        layout_corpo.addWidget(
-            self.area_anuncios_lateral
-        )
+        layout_corpo.setSpacing(16)
+        layout_corpo.setContentsMargins(0, 0, 0, 0)
 
         self.container_conteudo = QWidget()
+        self.container_conteudo.setObjectName("containerConteudo")
         self.container_conteudo.setSizePolicy(
             QSizePolicy.Expanding,
             QSizePolicy.Preferred
         )
-        layout_conteudo = QVBoxLayout(
-            self.container_conteudo
-        )
-        layout_conteudo.setContentsMargins(
-            0,
-            0,
-            0,
-            0
-        )
-        layout_conteudo.setSpacing(
-            10
-        )
+        self.container_conteudo.setStyleSheet("""
+            QWidget#containerConteudo {
+                background: transparent;
+            }
+        """)
 
-        layout_corpo.addWidget(
-            self.container_conteudo,
-            stretch=1
-        )
+        layout_conteudo = QVBoxLayout(self.container_conteudo)
+        layout_conteudo.setContentsMargins(0, 0, 0, 0)
+        layout_conteudo.setSpacing(10)
 
-        layout_principal.addLayout(
-            layout_corpo
-        )
+        self.painel_direito = QWidget()
+        self.painel_direito.setObjectName("painelDireito")
+        self.painel_direito.setFixedWidth(290)
+        self.painel_direito.setStyleSheet("""
+            QWidget#painelDireito {
+                background: transparent;
+            }
+        """)
+
+        layout_direito = QVBoxLayout(self.painel_direito)
+        layout_direito.setContentsMargins(0, 0, 0, 0)
+        layout_direito.setSpacing(12)
+
+        layout_corpo.addWidget(self.container_conteudo, stretch=3)
+        layout_corpo.addWidget(self.painel_direito, stretch=0)
+
+        layout_principal.addLayout(layout_corpo)
 
         # =====================================================
         # CABEÇALHO DA ÁREA DE VÍDEOS
@@ -298,8 +310,8 @@ class MainWindow(QMainWindow):
         )
 
         self.label_selecionados.setStyleSheet("""
-            font-weight: bold;
-            color: #555555;
+            font-weight: 600;
+            color: #4b5563;
         """)
 
         layout_cabecalho_videos.addWidget(
@@ -319,10 +331,28 @@ class MainWindow(QMainWindow):
         self.botao_selecionar_todos = QPushButton(
             "Selecionar todos"
         )
+        self.botao_selecionar_todos.setStyleSheet("""
+            QPushButton {
+                background: #f3f4f6;
+                color: #374151;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                padding: 7px 12px;
+            }
+        """)
 
         self.botao_desmarcar_todos = QPushButton(
             "Desmarcar todos"
         )
+        self.botao_desmarcar_todos.setStyleSheet("""
+            QPushButton {
+                background: #f3f4f6;
+                color: #374151;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                padding: 7px 12px;
+            }
+        """)
 
         layout_selecao.addWidget(
             self.botao_selecionar_todos
@@ -343,228 +373,254 @@ class MainWindow(QMainWindow):
         # =====================================================
 
         self.scroll_videos = QScrollArea()
-
-        self.scroll_videos.setWidgetResizable(
-            True
-        )
+        self.scroll_videos.setWidgetResizable(True)
+        self.scroll_videos.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background: transparent;
+            }
+        """)
 
         self.container_videos = QWidget()
 
-        self.layout_videos = QVBoxLayout(
-            self.container_videos
-        )
+        self.layout_videos = QVBoxLayout(self.container_videos)
+        self.layout_videos.setAlignment(Qt.AlignTop)
+        self.layout_videos.setSpacing(8)
 
-        self.layout_videos.setAlignment(
-            Qt.AlignTop
-        )
+        self.scroll_videos.setWidget(self.container_videos)
 
-        self.layout_videos.setSpacing(
-            8
-        )
-
-        self.scroll_videos.setWidget(
-            self.container_videos
-        )
-
-        layout_conteudo.addWidget(
-            self.scroll_videos,
-            stretch=1
-        )
+        layout_conteudo.addWidget(self.scroll_videos, stretch=1)
 
         # =====================================================
-        # PASTA DE DESTINO
+        # CONFIGURAÇÕES DO PAINEL DIREITO
         # =====================================================
 
-        layout_pasta = QHBoxLayout()
-
-        label_pasta = QLabel(
-            "Salvar em:"
-        )
-
-        self.campo_pasta = QLineEdit()
-
-        self.campo_pasta.setText(
-            self.pasta_destino
-        )
-
-        self.campo_pasta.setPlaceholderText(
-            "Selecione a pasta onde os arquivos serão salvos..."
-        )
-
-        self.botao_pasta = QPushButton(
-            "Selecionar"
-        )
-
-        layout_pasta.addWidget(
-            label_pasta
-        )
-
-        layout_pasta.addWidget(
-            self.campo_pasta
-        )
-
-        layout_pasta.addWidget(
-            self.botao_pasta
-        )
-
-        layout_conteudo.addLayout(
-            layout_pasta
-        )
-
-        # =====================================================
-        # ÁREA DE DOWNLOAD
-        # =====================================================
-
-        layout_download = QVBoxLayout()
-
-        layout_download_topo = QHBoxLayout()
-
-        self.label_download = QLabel(
-            "Nenhum vídeo selecionado"
-        )
-
-        self.label_download.setStyleSheet("""
-            font-weight: bold;
-            font-size: 14px;
+        painel_config = QWidget()
+        painel_config.setObjectName("painelConfig")
+        painel_config.setStyleSheet("""
+            QWidget#painelConfig {
+                background: #f8fafc;
+                border: 1px solid #dfe7ee;
+                border-radius: 12px;
+            }
         """)
 
-        self.botao_download = QPushButton(
-            "Iniciar download"
-        )
+        layout_painel_config = QVBoxLayout(painel_config)
+        layout_painel_config.setContentsMargins(12, 12, 12, 12)
+        layout_painel_config.setSpacing(10)
 
-        self.botao_download.setMinimumWidth(
-            160
-        )
+        label_config = QLabel("Configurações")
+        label_config.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout_painel_config.addWidget(label_config)
 
-        self.botao_download.setEnabled(
-            False
-        )
+        layout_pasta = QVBoxLayout()
+        layout_pasta.setSpacing(6)
 
-        layout_download_topo.addWidget(
-            self.label_download
-        )
+        label_pasta = QLabel("Salvar em")
+        label_pasta.setStyleSheet("font-size: 12px; color: #4b5563;")
 
-        layout_download_topo.addStretch()
+        self.campo_pasta = QLineEdit()
+        self.campo_pasta.setText(self.pasta_destino)
+        self.campo_pasta.setPlaceholderText("Selecione a pasta...")
+        self.campo_pasta.setStyleSheet("""
+            QLineEdit {
+                background: #ffffff;
+                border: 1px solid #d1d5db;
+                padding: 8px 10px;
+            }
+        """)
 
-        layout_download_topo.addWidget(
-            self.botao_download
-        )
+        self.botao_pasta = QPushButton("Selecionar")
+        self.botao_pasta.setStyleSheet("""
+            QPushButton {
+                background: #2563eb;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-weight: 600;
+            }
+        """)
 
-        layout_download.addLayout(
-            layout_download_topo
-        )
+        layout_pasta.addWidget(label_pasta)
+        layout_pasta.addWidget(self.campo_pasta)
+        layout_pasta.addWidget(self.botao_pasta)
 
-        # =====================================================
-        # BARRA DE PROGRESSO
-        # =====================================================
+        layout_painel_config.addLayout(layout_pasta)
+
+        self.label_download = QLabel("Nenhum vídeo selecionado")
+        self.label_download.setStyleSheet("""
+            QLabel {
+                color: #374151;
+                font-size: 12px;
+                font-weight: 600;
+            }
+        """)
+        self.label_download.setWordWrap(True)
+        layout_painel_config.addWidget(self.label_download)
 
         self.barra_progresso = QProgressBar()
+        self.barra_progresso.setRange(0, 100)
+        self.barra_progresso.setValue(0)
+        self.barra_progresso.setVisible(False)
+        self.barra_progresso.setStyleSheet("""
+            QProgressBar {
+                border: 1px solid #bfdbfe;
+                border-radius: 6px;
+                background: #e5e7eb;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                background: #2563eb;
+                border-radius: 5px;
+            }
+        """)
+        layout_painel_config.addWidget(self.barra_progresso)
 
-        self.barra_progresso.setRange(
-            0,
-            100
-        )
+        self.botao_download = QPushButton("Iniciar download")
+        self.botao_download.setMinimumHeight(42)
+        self.botao_download.setEnabled(False)
+        self.botao_download.setStyleSheet("""
+            QPushButton {
+                background: #2563eb;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+            QPushButton:disabled {
+                background: #93c5fd;
+                color: #dbeafe;
+            }
+        """)
 
-        self.barra_progresso.setValue(
-            0
-        )
+        layout_painel_config.addWidget(self.botao_download)
 
-        self.barra_progresso.setVisible(
-            False
-        )
+        layout_direito.addWidget(painel_config)
 
-        layout_download.addWidget(
-            self.barra_progresso
-        )
+        # =====================================================
+        # OPÇÕES
+        # =====================================================
 
-        layout_conteudo.addLayout(
-            layout_download
-        )
+        painel_opcoes = QWidget()
+        painel_opcoes.setObjectName("painelOpcoes")
+        painel_opcoes.setStyleSheet("""
+            QWidget#painelOpcoes {
+                background: #f8fafc;
+                border: 1px solid #dfe7ee;
+                border-radius: 12px;
+            }
+        """)
+
+        layout_painel_opcoes = QVBoxLayout(painel_opcoes)
+        layout_painel_opcoes.setContentsMargins(12, 12, 12, 12)
+        layout_painel_opcoes.setSpacing(10)
+
+        label_opcoes = QLabel("Opções")
+        label_opcoes.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout_painel_opcoes.addWidget(label_opcoes)
+
+        for texto in ["Baixar legendas", "Converter para MP3"]:
+            linha = QHBoxLayout()
+            linha.setSpacing(8)
+
+            label = QLabel(texto)
+            label.setStyleSheet("font-size: 12px; color: #374151;")
+            checkbox = QCheckBox()
+            checkbox.setChecked(False)
+            checkbox.setStyleSheet("""
+                QCheckBox {
+                    spacing: 8px;
+                }
+            """)
+
+            linha.addWidget(label)
+            linha.addStretch()
+            linha.addWidget(checkbox)
+            layout_painel_opcoes.addLayout(linha)
+
+        layout_direito.addWidget(painel_opcoes)
+
+        # =====================================================
+        # PRO
+        # =====================================================
+
+        painel_pro = QWidget()
+        painel_pro.setObjectName("painelPro")
+        painel_pro.setStyleSheet("""
+            QWidget#painelPro {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #dbeafe, stop:1 #e0f2fe);
+                border: 1px solid #bfdbfe;
+                border-radius: 12px;
+            }
+        """)
+
+        layout_painel_pro = QVBoxLayout(painel_pro)
+        layout_painel_pro.setAlignment(Qt.AlignCenter)
+        layout_painel_pro.setContentsMargins(12, 12, 12, 12)
+
+        badge = QLabel("✦")
+        badge.setAlignment(Qt.AlignCenter)
+        badge.setStyleSheet("font-size: 28px; color: #f59e0b;")
+
+        pro_label = QLabel("Atualize para o Pro")
+        pro_label.setAlignment(Qt.AlignCenter)
+        pro_label.setStyleSheet("font-weight: bold; font-size: 16px; color: #1f2937;")
+
+        pro_sub = QLabel("Mais velocidade, sem limites,\ne recursos extras.")
+        pro_sub.setAlignment(Qt.AlignCenter)
+        pro_sub.setStyleSheet("font-size: 11px; color: #475569; line-height: 1.3;")
+
+        botao_pro = QPushButton("Saiba mais")
+        botao_pro.setStyleSheet("""
+            QPushButton {
+                background: #ffffff;
+                color: #1d4ed8;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-weight: bold;
+            }
+        """)
+
+        layout_painel_pro.addWidget(badge)
+        layout_painel_pro.addWidget(pro_label)
+        layout_painel_pro.addWidget(pro_sub)
+        layout_painel_pro.addWidget(botao_pro)
+
+        layout_direito.addWidget(painel_pro)
+
+        layout_direito.addStretch()
 
         # =====================================================
         # LOG
         # =====================================================
 
-        label_log = QLabel(
-            "Log"
-        )
-
+        label_log = QLabel("Log")
         label_log.setStyleSheet("""
             font-size: 16px;
             font-weight: bold;
         """)
 
-        layout_conteudo.addWidget(
-            label_log
-        )
+        layout_conteudo.addWidget(label_log)
 
         self.log = QTextEdit()
-
-        self.log.setReadOnly(
-            True
-        )
-
-        self.log.setMaximumHeight(
-            150
-        )
-
-        layout_conteudo.addWidget(
-            self.log
-        )
-
-        # =====================================================
-        # MONETIZAÇÃO INFERIOR
-        # =====================================================
-
-        self.area_anuncios_inferior = QWidget()
-        self.area_anuncios_inferior.setObjectName(
-            "areaAnunciosInferior"
-        )
-        self.area_anuncios_inferior.setMinimumHeight(
-            90
-        )
-        self.area_anuncios_inferior.setMaximumHeight(
-            120
-        )
-        self.area_anuncios_inferior.setStyleSheet("""
-            QWidget#areaAnunciosInferior {
-                border: 1px solid #d9d9d9;
-                border-radius: 10px;
-                background-color: #ffffff;
+        self.log.setReadOnly(True)
+        self.log.setMaximumHeight(180)
+        self.log.setStyleSheet("""
+            QTextEdit {
+                background: #ffffff;
+                border: 1px solid #dfe7ee;
+                border-radius: 8px;
+                color: #374151;
             }
         """)
 
-        layout_anuncios_inferior = QVBoxLayout(
-            self.area_anuncios_inferior
-        )
-        layout_anuncios_inferior.setContentsMargins(
-            0,
-            0,
-            0,
-            0
-        )
+        layout_conteudo.addWidget(self.log)
 
-        self.web_anuncios_inferior = QWebEngineView()
-        self.web_anuncios_inferior.setMinimumHeight(
-            78
-        )
-        self.web_anuncios_inferior.setMaximumHeight(
-            110
-        )
-
-        layout_anuncios_inferior.addWidget(
-            self.web_anuncios_inferior
-        )
-
-        self._carregar_area_monetizacao(
-            self.web_anuncios_inferior,
-            "Espaço de monetização inferior",
-            "Faixa menor reservada para anúncios na parte inferior."
-        )
-
-        layout_conteudo.addWidget(
-            self.area_anuncios_inferior
-        )
+        self.area_anuncios_inferior = QWidget()
+        self.area_anuncios_inferior.setVisible(False)
 
         # =====================================================
         # EVENTOS
