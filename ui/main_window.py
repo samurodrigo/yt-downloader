@@ -521,7 +521,10 @@ class MainWindow(QMainWindow):
             "areaAnunciosInferior"
         )
         self.area_anuncios_inferior.setMinimumHeight(
-            92
+            90
+        )
+        self.area_anuncios_inferior.setMaximumHeight(
+            120
         )
         self.area_anuncios_inferior.setStyleSheet("""
             QWidget#areaAnunciosInferior {
@@ -543,7 +546,10 @@ class MainWindow(QMainWindow):
 
         self.web_anuncios_inferior = QWebEngineView()
         self.web_anuncios_inferior.setMinimumHeight(
-            88
+            78
+        )
+        self.web_anuncios_inferior.setMaximumHeight(
+            110
         )
 
         layout_anuncios_inferior.addWidget(

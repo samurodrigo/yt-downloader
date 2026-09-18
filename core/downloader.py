@@ -70,6 +70,8 @@ class YouTubeDownloader:
                 "bestaudio/best"
             )
 
+            saida_extensao = "mp3"
+
             qualidade = (
                 video.selected_quality
             )
@@ -98,6 +100,8 @@ class YouTubeDownloader:
 
         else:
 
+            saida_extensao = "mp4"
+
             qualidade = (
                 video.selected_quality
             )
@@ -105,16 +109,16 @@ class YouTubeDownloader:
             if qualidade == "best":
 
                 formato = (
-                    "bestvideo+bestaudio/"
-                    "best"
+                    "bestvideo[ext=mp4]+bestaudio[ext=m4a]/"
+                    "best[ext=mp4]"
                 )
 
             else:
 
                 formato = (
-                    f"bestvideo[height<={qualidade}]"
-                    "+bestaudio/"
-                    f"best[height<={qualidade}]"
+                    f"bestvideo[height<={qualidade}][ext=mp4]"
+                    "+bestaudio[ext=m4a]/"
+                    f"best[height<={qualidade}][ext=mp4]"
                 )
 
             postprocessors = []
@@ -128,7 +132,7 @@ class YouTubeDownloader:
             "format": formato,
 
             "outtmpl": str(
-                pasta / "%(title)s.%(ext)s"
+                pasta / f"%(title)s.{saida_extensao}"
             ),
 
             "ffmpeg_location": str(
@@ -136,6 +140,8 @@ class YouTubeDownloader:
                 if self.ffmpeg_path.exists()
                 else self.ffmpeg_dir
             ),
+
+            "merge_output_format": "mp4",
 
             "noplaylist": True,
 
